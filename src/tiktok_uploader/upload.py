@@ -283,15 +283,17 @@ def _go_to_upload(driver) -> None:
     ----------
     driver : selenium.webdriver
     """
+    logger.debug(green("hey1"))
     logger.debug(green("Navigating to upload page"))
-
+    logger.debug(green("hey2"))
     # if the upload page is not open, navigate to it
     if driver.current_url != config["paths"]["upload"]:
         driver.get(config["paths"]["upload"])
     # otherwise, refresh the page and accept the reload alert
     else:
         _refresh_with_alert(driver)
-
+    
+    print("hey")
     # changes to the iframe
     # _change_to_upload_iframe(driver)
 
@@ -302,7 +304,6 @@ def _go_to_upload(driver) -> None:
     # Return to default webpage
     driver.switch_to.default_content()
 
-
 def _change_to_upload_iframe(driver) -> None:
     """
     Switch to the iframe of the upload page
@@ -311,11 +312,7 @@ def _change_to_upload_iframe(driver) -> None:
     ----------
     driver : selenium.webdriver
     """
-    iframe_selector = EC.presence_of_element_located(
-        (By.XPATH, config["selectors"]["upload"]["iframe"])
-    )
-    iframe = WebDriverWait(driver, config["explicit_wait"]).until(iframe_selector)
-    driver.switch_to.frame(iframe)
+    pass
 
 
 def _set_description(driver, description: str) -> None:
@@ -745,29 +742,22 @@ def _post_video(driver) -> None:
     ----------
     driver : selenium.webdriver
     """
-    logger.debug(green("Clicking the post button"))
-
+    logger.debug(green('Clicking the post button'))
+    logger.debug(driver.current_url)
+    # Maybe this change in the future
+    button = driver.find_element(By.XPATH, '//*[@id="root"]/div/div[2]/div[2]/div/div/div/div/div/div[3]/div/div[2]/div[9]/button[1]')
+    button.click()    
+    
     try:
-        post = WebDriverWait(driver, config["implicit_wait"]).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, config["selectors"]["upload"]["post"])
+        # waits for the video to upload
+        post_confirmation = EC.presence_of_element_located(
+            (By.XPATH, config['selectors']['upload']['post_confirmation'])
             )
-        )
-        driver.execute_script(
-            "arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});", post
-        )
-        post.click()
-    except ElementClickInterceptedException:
-        logger.debug(green("Trying to click on the button again"))
-        driver.execute_script('document.querySelector(".TUXButton--primary").click()')
+        WebDriverWait(driver, config['explicit_wait']).until(post_confirmation)
+    except TimeoutException as exception:
+            print("TimeoutException occurred:\n", exception)
 
-    # waits for the video to upload
-    post_confirmation = EC.presence_of_element_located(
-        (By.XPATH, config["selectors"]["upload"]["post_confirmation"])
-    )
-    WebDriverWait(driver, config["explicit_wait"]).until(post_confirmation)
-
-    logger.debug(green("Video posted successfully"))
+    logger.debug(green('Video posted successfully'))
 
 
 # HELPERS
